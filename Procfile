@@ -1,1 +1,1 @@
-web:gunicorn --worker-class eventlet -w 1 flask_setup:app $ heroku ps:scale web=1
+web: gunicorn --worker-class socketio.gunicorn.GeventSocketIOWorker --log-file=- flask_setup:app
