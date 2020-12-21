@@ -70,7 +70,7 @@ function removeImage(data) {
 
 
 // initialize socket to send flle
-var socket = io.connect('http://' + document.domain + ':' + location.port);
+var socket = io.connect('http://' + document.domain + ':' + location.port, {secure: true});
 socket.on('connect', function() {
    console.log('socket init');
 });
