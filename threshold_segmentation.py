@@ -29,7 +29,7 @@ def otsu(histogram):
          s_max = sigma
          threshold = i
 
-   print('otsu threshold = ' + str(threshold))
+   # print('otsu threshold = ' + str(threshold))
    return threshold
 
 def binary_thresholding(image, threshold):

@@ -2,37 +2,6 @@
 var buttonPressed = false;
 
 
-function readFile(fileInput, operation) {
-
-   // get file   
-   const image = fileInput.files[0];
-   console.log('file uploaded');
-
-   // convert image to base64
-   var reader = new FileReader();
-   reader.readAsDataURL(image);
-
-   reader.onload = function() {
-      var data = reader.result;
-
-      // load original image to webpage
-      showImage(data);
-
-      // send socket
-      var imgData = data.substring(23, data.length);
-      if (operation == 'edges') {
-         socket.emit('edges', imgData);
-         console.log('edges detection starting...');
-      }
-
-      else if (operation == 'segments') {
-         socket.emit('segments', imgData);
-         console.log('image segmentation starting...');
-      }
-   }; 
-}
-
-
 function showLoading() {
 
    // add loading signal
@@ -44,6 +13,13 @@ function showLoading() {
    imageContainer.appendChild(loading);
 
    return;
+}
+
+function removeLoading() {
+   // remove loading div
+   var loading = document.getElementById('loading');
+   loading.remove();
+
 }
 
 
@@ -59,7 +35,7 @@ function showImage(data) {
 
 
 // remove images if another function is chosen
-function removeImage(data) {
+function removeImage() {
    var images = document.getElementsByTagName('img');
 
    for (let i = images.length - 1; i >= 0; i--) {
@@ -69,11 +45,60 @@ function removeImage(data) {
 }
 
 
-// initialize socket to send flle
-var socket = io.connect('http://' + document.domain + ':' + location.port, {secure: true});
-socket.on('connect', function() {
-   console.log('socket init');
-});
+function contactServer(fileInput, url) {
+   // get file   
+   const image = fileInput.files[0];
+   console.log('file uploaded');
+
+   // convert image to base64
+   var reader = new FileReader();
+   reader.readAsDataURL(image);
+
+
+   reader.onload = function() {
+      var data = reader.result;
+
+      // load original image to webpage
+      showImage(data);
+
+      var imgData = data.substring(23, data.length);
+
+      $.ajax({
+         url: url,
+         method: "POST",        
+         data: imgData,
+         contentType: "image/jpeg",
+         success: function (response) {
+            response = response.substring(1, response.length - 1)
+            var img = 'data:image/jpeg;base64,' + response;
+
+            removeLoading();
+            showImage(img);
+         }
+      });
+   };     
+}
+
+// image segmentation button
+const segments = document.getElementById('segments');
+if (segments != null) {
+   segments.addEventListener('change', function() {
+      
+      // remove images and reset boolean
+      if (buttonPressed) {
+         removeImage();
+      }
+      else {
+         buttonPressed = true;
+      }
+
+      const fileInput = document.getElementById('segments');
+      
+      showLoading()
+      contactServer(fileInput, 'segments');
+
+   });
+}
 
 
 // edge detection button
@@ -88,51 +113,10 @@ if (edges != null) {
       else {
          buttonPressed = true;
       }
-      
-      // var label = document.getElementById('edgeLabel');
-      // label.style.backgroundColor = '#3366ff'
    
       const fileInput = document.getElementById('edges');
-      readFile(fileInput, 'edges');      
+    
       showLoading();
-
+      contactServer(fileInput, 'edges');
    });
 }
-
-// image segmentation button
-const segments = document.getElementById('segments');
-if (segments != null) {
-   segments.addEventListener('change', function() {
-
-      // remove images and reset boolean
-      if (buttonPressed) {
-         removeImage();
-      }
-      else {
-         buttonPressed = true;
-      }
-
-      // var label = document.getElementById('segmentLabel');
-      // label.style.backgroundColor = '#3366ff'
-
-      const fileInput = document.getElementById('segments');
-      readFile(fileInput, 'segments');      
-      showLoading();      
-   });
-}
-
-
-// grabs returned image from server
-socket.on('return_image', function(binData) {
-   console.log('file received');
-
-   // remove loading div
-   var loading = document.getElementById('loading');
-   loading.remove();
-
-   // add image
-   var img = 'data:image/jpeg;base64,' + binData;
-   showImage(img);
-
-   // socket.close(1000, 'done');
-});

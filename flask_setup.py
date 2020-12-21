@@ -1,15 +1,11 @@
-from flask import Flask, render_template
-from flask_socketio import SocketIO, emit
+from flask import Flask, render_template, request, json
 import base64
 from PIL import Image
 from io import BytesIO
 import canny
 import threshold_segmentation
 
-
 app = Flask(__name__)
-socketio = SocketIO(app, always_connect=True, engineio_logger=True, ping_timeout=60, ping_interval=5)
-
 
 # render html
 @app.route('/')
@@ -17,47 +13,40 @@ def index():
    return render_template('index.html')
 
 
-# check that socket is connected
-@socketio.on('connect')
-def connected():
-   print('connected')
-
-
 # edge detection
-@socketio.on('edges')
-def edge_detection(data):
+@app.route('/edges', methods = ['POST'])
+def edge_detection():
 
-   save_file(data)
+   # receive file and save
+   img = request.get_data()
+   save_file(img)
 
    # run edge detection
-   print('running edge detection')
    canny.edge_detector()
-   print('finished edge detection')
 
-   image = encode()
+   # load image
+   img = encode()
    
-   print('sending image...')
-   emit('return_image', image)
+   return json.dumps(img)
 
 
-# image segmentation
-@socketio.on('segments')
-def image_segmentation(data):
-   
-   save_file(data)
+@app.route('/segments', methods = ['POST'])
+def image_segmentation():
+
+   # receive file and save
+   img = request.get_data()
+   save_file(img)
 
    # run image segmentation
-   print('running image segmentation')
    threshold_segmentation.image_segmentation()
-   print('finished image segmentation')
 
-   image = encode()
+   # load image
+   img = encode()
 
-   print('sending image...')
-   emit('return_image', image)
+   return json.dumps(img)
 
 
-# convert image to base64 to send with socket
+# convert image to base64 to send with ajax
 def encode():
    # encode image in base64 to send to client
    with open('output.jpg', 'rb') as image:
@@ -80,7 +69,4 @@ def save_file(data):
 
 if __name__ == '__main__':
    # run flask
-   # app.run(debug=True, host='0.0.0.0', port=5000)
-   
-   # run socket
-   socketio.run(app, debug=True)
+   app.run(debug=True, port=8000)
