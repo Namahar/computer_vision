@@ -70,7 +70,7 @@ function removeImage(data) {
 
 
 // initialize socket to send flle
-var socket = io.connect('https://saeedcomputervision.herokuapp.com/');
+var socket = io.connect('https://saeedcomputervision.herokuapp.com');
 socket.on('connect', function() {
    console.log('socket init');
 });
