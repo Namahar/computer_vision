@@ -21,6 +21,8 @@ def edge_detection():
    img = request.get_data()
    save_file(img)
 
+   # return 'waiting'
+   
    # run edge detection
    canny.edge_detector()
 

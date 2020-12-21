@@ -68,7 +68,6 @@ function contactServer(fileInput, url) {
          method: "POST",        
          data: imgData,
          contentType: "image/jpeg",
-         timeout: 60000,
          success: function (response) {
             response = response.substring(1, response.length - 1)
             var img = 'data:image/jpeg;base64,' + response;
